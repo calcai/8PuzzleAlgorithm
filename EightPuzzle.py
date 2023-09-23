@@ -33,44 +33,41 @@ class EightPuzzle():
             print(r)
     
     def move(self, dir):
-        if not (dir == "up" or dir == "down" or dir == "left" or dir == "right"):
-            return False
-        if dir == "up":
-            if self.zero[1] == 0:
-                return False
-            else:
-                self.up()
-        if dir == "down":
-            if self.zero[1] == 2:
-                return False
-            else:
-                self.down()
-        if dir == "left":
-            if self.zero[0] == 0:
-                return False
-            else:
-                self.left()
-        if dir == "right":
-            if self.zero[0] == 2:
-                return False
-            else:
-                self.right()
-        return True
+        move_methods = {
+            "up": self.up(),
+            "down": self.down(),
+            "left": self.left(),
+            "right": self.right()
+        }
+        if dir in move_methods:
+            return move_methods[dir]
 
     # helper methods for move method that do the swap
     # simultaneously swap the locations and set the new zero location
     def up(self):
+        if self.zero[1] == 0:
+            return False
         self.puzzle[self.zero[1]][self.zero[0]], self.puzzle[self.zero[1] - 1][self.zero[0]] = self.puzzle[self.zero[1] - 1][self.zero[0]], self.puzzle[self.zero[1]][self.zero[0]]
         self.zero[1] -= 1
+        return True
     def down(self):
+        if self.zero[1] == 2:
+            return False
         self.puzzle[self.zero[1]][self.zero[0]], self.puzzle[self.zero[1] + 1][self.zero[0]] = self.puzzle[self.zero[1] + 1][self.zero[0]], self.puzzle[self.zero[1]][self.zero[0]]
         self.zero[1] += 1
+        return True
     def left(self):
+        if self.zero[0] == 0:
+            return False
         self.puzzle[self.zero[1]][self.zero[0]], self.puzzle[self.zero[1]][self.zero[0] - 1] = self.puzzle[self.zero[1]][self.zero[0] - 1], self.puzzle[self.zero[1]][self.zero[0]]
         self.zero[0] -= 1
+        return True
     def right(self):
+        if self.zero[0] == 2:
+            return False
         self.puzzle[self.zero[1]][self.zero[0]], self.puzzle[self.zero[1]][self.zero[0] + 1] = self.puzzle[self.zero[1]][self.zero[0] + 1], self.puzzle[self.zero[1]][self.zero[0]]
         self.zero[0] += 1
+        return True
 
     def randomizeState(self, n):
         self.setState("012 345 678")
@@ -98,7 +95,7 @@ class EightPuzzle():
         key = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         for i in range(3):
             for j in range(3):
-                if self.puzzle[i, j] != key[i,j]:
+                if self.puzzle[i][j] != key[i][j]:
                     return False
         return True
 
@@ -159,6 +156,8 @@ def main():
     test.printBoard()
     if test.solved:
         print(0)
+    else:
+        print(1)
     
 if __name__=="__main__":
     main()
