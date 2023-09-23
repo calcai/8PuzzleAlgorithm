@@ -1,4 +1,5 @@
 import random
+from queue import PriorityQueue, Empty
 
 class EightPuzzle():
 
@@ -6,6 +7,8 @@ class EightPuzzle():
     def __init__(self):
         self.puzzle = [[],[],[]]
         self.zero = []
+        self.pastmoves = []
+        self.nummoves = 0
 
     # creates the state based on sequence input and places in 2D array with 3 rows and 3 columns
     # also sets the zero from inital state
@@ -26,21 +29,38 @@ class EightPuzzle():
                 state += str(i)
             state += " "
         print(state)
-    
+
+    #helper method
+    def getState(self):
+        state = ""
+        for r in self.puzzle:
+            for i in r:
+                state += str(i)
+            state += " "
+        return state
+        
     # easier print to read board
     def printBoard(self):
         for r in self.puzzle:
             print(r)
     
-    def move(self, dir):
-        move_methods = {
+    def move(self, dir) -> bool:
+        '''move_methods = {
             "up": self.up(),
             "down": self.down(),
             "left": self.left(),
             "right": self.right()
         }
         if dir in move_methods:
-            return move_methods[dir]
+            return move_methods[dir]'''
+        if dir == "up":
+            return self.up()
+        if dir == "down":
+            return self.down()
+        if dir == "left":
+            return self.left()
+        if dir == "right":
+            return self.right()
 
     # helper methods for move method that do the swap
     # simultaneously swap the locations and set the new zero location
@@ -85,21 +105,42 @@ class EightPuzzle():
             elif randnum == 3:
                 if self.move("right"):
                     n -= 1
+
     def solveAStar(self, heuristic):
+        pq = PriorityQueue()
         if heuristic == "h1":
-            up, down, left, right = self.h1up, self.h1down, self.h1left, self.h1right
+            while not self.solved():
+                self.nummoves += 1
+                up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
+                if self.move("up"):
+                    pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
+                    self.move("down")
+                if self.move("down"):
+                    pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
+                    self.move("up")
+                if self.move("left"):
+                    pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
+                    self.move("right")
+                if self.move("right"):
+                    pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
+                    self.move("left")
+                func, state, moves, n = pq.get()
+                self.setState(state)
+                self.pastmoves = moves
+                self.nummoves = n
+            for i in self.pastmoves:
+                print(i)
+                    
         elif heuristic == "h2":
             return
         
+    #helper method to check if solved
     def solved(self) -> bool:
-        key = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        for i in range(3):
-            for j in range(3):
-                if self.puzzle[i][j] != key[i][j]:
-                    return False
+        if self.puzzle != [[0, 1, 2], [3, 4, 5], [6, 7, 8]]:
+            return False
         return True
 
-    
+    #helper methods to find heuristic 1
     def h1up(self):
         if self.move("up"):
             h = 0
@@ -148,16 +189,13 @@ class EightPuzzle():
 
 def main():
     test = EightPuzzle()
-    test.setState("012 345 678")
+    test.randomizeState(50)
     test.printBoard()
-    if test.solved:
-        print(0)
-    test.randomizeState(1000)
+    print(test.h1up())
+    print(test.h1down())
+    print(test.h1left())
+    print(test.h1right())
+    test.solveAStar("h1")
     test.printBoard()
-    if test.solved:
-        print(0)
-    else:
-        print(1)
-    
 if __name__=="__main__":
     main()
