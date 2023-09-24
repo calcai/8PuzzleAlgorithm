@@ -9,6 +9,7 @@ class EightPuzzle():
         self.zero = []
         self.pastmoves = []
         self.nummoves = 0
+        self.nodes = 0
 
     # creates the state based on sequence input and places in 2D array with 3 rows and 3 columns
     # also sets the zero from inital state
@@ -45,14 +46,6 @@ class EightPuzzle():
             print(r)
     
     def move(self, dir) -> bool:
-        '''move_methods = {
-            "up": self.up(),
-            "down": self.down(),
-            "left": self.left(),
-            "right": self.right()
-        }
-        if dir in move_methods:
-            return move_methods[dir]'''
         if dir == "up":
             return self.up()
         if dir == "down":
@@ -108,7 +101,36 @@ class EightPuzzle():
 
     def solveAStar(self, heuristic):
         pq = PriorityQueue()
+        visited = set()
         if heuristic == "h1":
+            while not self.solved():
+                self.nummoves += 1
+                up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
+                if self.move("up"):
+                    pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
+                    self.nodes += 1
+                    self.move("down")
+                if self.move("down"):
+                    pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
+                    self.nodes += 1
+                    self.move("up")
+                if self.move("left"):
+                    pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
+                    self.nodes += 1
+                    self.move("right")
+                if self.move("right"):
+                    pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
+                    self.nodes += 1
+                    self.move("left")
+                func, state, moves, n = pq.get()
+                self.setState(state)
+                self.pastmoves = moves
+                self.nummoves = n
+                if not self.maxNodes(5000):
+                    break
+            for i in self.pastmoves:
+                print(i)                    
+        elif heuristic == "h2":
             while not self.solved():
                 self.nummoves += 1
                 up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
@@ -128,11 +150,10 @@ class EightPuzzle():
                 self.setState(state)
                 self.pastmoves = moves
                 self.nummoves = n
+                if not self.maxNodes(5000):
+                    break
             for i in self.pastmoves:
                 print(i)
-                    
-        elif heuristic == "h2":
-            return
         
     #helper method to check if solved
     def solved(self) -> bool:
@@ -186,16 +207,60 @@ class EightPuzzle():
         else:
             return float('inf')
 
+    def h2up(self):
+        if self.move("up"):
+            h = 0
+            for n, i in enumerate(self.puzzle):
+                for m, j in enumerate(i):
+                    h += (abs(j // 3 - n) + abs(j % 3 - m))
+            self.move("down")
+            return h
+        else:
+            return float('inf')
+    def h2down(self):
+        if self.move("down"):
+            h = 0
+            for n, i in enumerate(self.puzzle):
+                for m, j in enumerate(i):
+                    h += (abs(j // 3 - n) + abs(j % 3 - m))
+            self.move("up")
+            return h
+        else:
+            return float('inf')
+    def h2left(self):
+        if self.move("left"):
+            h = 0
+            for n, i in enumerate(self.puzzle):
+                for m, j in enumerate(i):
+                    h += (abs(j // 3 - n) + abs(j % 3 - m))
+            self.move("right")
+            return h
+        else:
+            return float('inf')
+    def h2right(self):
+        if self.move("right"):
+            h = 0
+            for n, i in enumerate(self.puzzle):
+                for m, j in enumerate(i):
+                    h += (abs(j // 3 - n) + abs(j % 3 - m))
+            self.move("left")
+            return h
+        else:
+            return float('inf')
+        
+    def maxNodes(self, n) -> bool:
+        if self.nodes > n:
+            print("Maximum nodes reached")
+            return False
+        return True
 
 def main():
     test = EightPuzzle()
-    test.randomizeState(50)
+    #test.randomizeState(60)
+    test.setState("283 406 751")
+    test.printState()
     test.printBoard()
-    print(test.h1up())
-    print(test.h1down())
-    print(test.h1left())
-    print(test.h1right())
     test.solveAStar("h1")
-    test.printBoard()
+    print(test.nummoves)
 if __name__=="__main__":
     main()
