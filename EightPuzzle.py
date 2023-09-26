@@ -1,6 +1,7 @@
 import random
-from queue import PriorityQueue, Empty
+from queue import PriorityQueue
 from collections import deque
+import re
 
 class EightPuzzle():
 
@@ -11,6 +12,8 @@ class EightPuzzle():
         self.pastmoves = []
         self.nummoves = 0
         self.nodes = 0
+
+    random.seed(1)
 
     # creates the state based on sequence input and places in 2D array with 3 rows and 3 columns
     # also sets the zero from inital state
@@ -47,6 +50,9 @@ class EightPuzzle():
             print(r)
     
     def move(self, dir) -> bool:
+        if dir != "up" and dir != "down" and dir != "left" and dir != "right":
+            print(dir)
+            print("invalid argument")
         if dir == "up":
             return self.up()
         if dir == "down":
@@ -84,6 +90,7 @@ class EightPuzzle():
         return True
 
     def randomizeState(self, n):
+        n = int(n)
         self.setState("012 345 678")
         while n > 0:
             randnum = random.randint(0,3)
@@ -100,44 +107,57 @@ class EightPuzzle():
                 if self.move("right"):
                     n -= 1
 
+
     def solveAStar(self, heuristic):
         pq = PriorityQueue()
-        visited = set()
+        visited = {}
         if heuristic == "h1":
+            self.pastmoves = []
+            self.nummoves = 0
+            self.nodes = 0
+            print("solving h1")
             while not self.solved():
                 self.nummoves += 1
                 up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
-                if self.move("up") and self.getState() not in visited:
-                    pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
-                    self.nodes += 1
-                    visited.add(self.getState())
-                    self.move("down")
-                if self.move("down") and self.getState() not in visited:
-                    pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
-                    self.nodes += 1
-                    visited.add(self.getState())
-                    self.move("up")
-                if self.move("left") and self.getState() not in visited:
-                    pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
-                    self.nodes += 1
-                    visited.add(self.getState())
-                    self.move("right")
-                if self.move("right") and self.getState() not in visited:
-                    pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
-                    self.nodes += 1
-                    visited.add(self.getState())
-                    self.move("left")
+                if self.move("up"):
+                    if self.getState() not in visited or visited[self.getState()] < self.nummoves + up:
+                        pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
+                        self.nodes += 1
+                        visited[self.getState()] = self.nummoves + up
+                        self.move("down")
+                if self.move("down"):
+                    if self.getState() not in visited or visited[self.getState()] < self.nummoves + down:
+                        pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
+                        self.nodes += 1
+                        visited[self.getState()] = self.nummoves + down
+                        self.move("up")
+                if self.move("left"):
+                    if self.getState() not in visited or visited[self.getState()] < self.nummoves + left:
+                        pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
+                        self.nodes += 1
+                        visited[self.getState()] = self.nummoves + left
+                        self.move("right")
+                if self.move("right"):
+                    if self.getState() not in visited or visited[self.getState()] < self.nummoves + right:
+                        pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
+                        self.nodes += 1
+                        visited[self.getState()] = self.nummoves + right
+                        self.move("left")
                 func, state, moves, n = pq.get()
                 self.setState(state)
                 self.pastmoves = moves
                 self.nummoves = n
                 if not self.maxNodes(5000):
-                    break
+                    return
             print(self.nummoves)  
             for i in self.pastmoves:
-                print(i)
-            print(self.nummoves)                    
+                print(i)                  
         elif heuristic == "h2":
+            print("solving h2")
+            self.pastmoves = []
+            self.nummoves = 0
+            self.nodes = 0
+            visited = set()
             while not self.solved():
                 self.nummoves += 1
                 up, down, left, right = self.h2up(), self.h2down(), self.h2left(), self.h2right()
@@ -170,7 +190,6 @@ class EightPuzzle():
             print(self.nummoves)  
             for i in self.pastmoves:
                 print(i)
-            print(self.nummoves)  
     
     #helper method to check if solved
     def solved(self) -> bool:
@@ -266,6 +285,8 @@ class EightPuzzle():
             return float('inf')
         
     def solveBeam(self, m):
+        print("solving beam")
+        m = int(m)
         visited = set()
         states = deque()
         states.append((0, self.getState(), [], 0))
@@ -281,6 +302,9 @@ class EightPuzzle():
             mdistance = [up, down, left, right]
             for i in range(4):
                 if self.move(directions[i]):
+                    self.nodes += 1
+                    if not self.maxNodes(5000):
+                        return
                     prevmoves = self.pastmoves + [directions[i]]
                     if self.getState() not in visited:
                         states.append((mdistance[i], self.getState(), prevmoves, self.nummoves + 1))
@@ -288,29 +312,40 @@ class EightPuzzle():
                     self.move(reverse[i])
             sortedStates = sorted(states, key = lambda x: x[0])  
             states = deque(sortedStates[:m])
-        print(self.nummoves)
+        print(self.nummoves) 
         for i in self.pastmoves:
             print(i)
-
-
-            
-
-
-        
+      
     def maxNodes(self, n) -> bool:
         if self.nodes > n:
             print("Maximum nodes reached")
             return False
         return True
+    
+    
+    def readCommands(self):
+        map = {
+            'setState': self.setState,
+            'printState': self.printState,
+            'move': self.move,
+            'randomizeState': self.randomizeState,
+            'solveAStar': self.solveAStar,
+            'solveBeam': self.solveBeam,
+            'maxNodes': self.maxNodes
+        }
+
+        with open('commands.txt', 'r') as file:
+            for line in file:
+                line = line.strip()
+                words = line.split(",")
+                function = words[0]
+                args = words[1:]
+                method = map[function]
+                method(*args) 
+
 
 def main():
-    test = EightPuzzle()
-    test.randomizeState(100)
-    #test.setState("786 124 350")
-    test.printState()
-    test.printBoard()
-    test.solveAStar("h1")
-    #test.solveBeam(500)
-    test.printBoard()
+    demo = EightPuzzle()
+    demo.readCommands()
 if __name__=="__main__":
     main()
