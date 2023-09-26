@@ -1,5 +1,6 @@
 import random
 from queue import PriorityQueue, Empty
+from collections import deque
 
 class EightPuzzle():
 
@@ -106,21 +107,25 @@ class EightPuzzle():
             while not self.solved():
                 self.nummoves += 1
                 up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
-                if self.move("up"):
+                if self.move("up") and self.getState() not in visited:
                     pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
                     self.nodes += 1
+                    visited.add(self.getState())
                     self.move("down")
-                if self.move("down"):
+                if self.move("down") and self.getState() not in visited:
                     pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
                     self.nodes += 1
+                    visited.add(self.getState())
                     self.move("up")
-                if self.move("left"):
+                if self.move("left") and self.getState() not in visited:
                     pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
                     self.nodes += 1
+                    visited.add(self.getState())
                     self.move("right")
-                if self.move("right"):
+                if self.move("right") and self.getState() not in visited:
                     pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
                     self.nodes += 1
+                    visited.add(self.getState())
                     self.move("left")
                 func, state, moves, n = pq.get()
                 self.setState(state)
@@ -128,23 +133,33 @@ class EightPuzzle():
                 self.nummoves = n
                 if not self.maxNodes(5000):
                     break
+            print(self.nummoves)  
             for i in self.pastmoves:
-                print(i)                    
+                print(i)
+            print(self.nummoves)                    
         elif heuristic == "h2":
             while not self.solved():
                 self.nummoves += 1
-                up, down, left, right = self.h1up(), self.h1down(), self.h1left(), self.h1right()
+                up, down, left, right = self.h2up(), self.h2down(), self.h2left(), self.h2right()
                 if self.move("up"):
                     pq.put((self.nummoves + up, self.getState(), self.pastmoves + ["up"], self.nummoves))
+                    self.nodes += 1
+                    visited.add(self.getState())
                     self.move("down")
                 if self.move("down"):
                     pq.put((self.nummoves + down, self.getState(), self.pastmoves + ["down"], self.nummoves))
+                    self.nodes += 1
+                    visited.add(self.getState())
                     self.move("up")
                 if self.move("left"):
                     pq.put((self.nummoves + left, self.getState(), self.pastmoves + ["left"], self.nummoves))
+                    self.nodes += 1
+                    visited.add(self.getState())
                     self.move("right")
                 if self.move("right"):
                     pq.put((self.nummoves + right, self.getState(), self.pastmoves + ["right"], self.nummoves))
+                    self.nodes += 1
+                    visited.add(self.getState())
                     self.move("left")
                 func, state, moves, n = pq.get()
                 self.setState(state)
@@ -152,9 +167,11 @@ class EightPuzzle():
                 self.nummoves = n
                 if not self.maxNodes(5000):
                     break
+            print(self.nummoves)  
             for i in self.pastmoves:
                 print(i)
-        
+            print(self.nummoves)  
+    
     #helper method to check if solved
     def solved(self) -> bool:
         if self.puzzle != [[0, 1, 2], [3, 4, 5], [6, 7, 8]]:
@@ -207,7 +224,7 @@ class EightPuzzle():
         else:
             return float('inf')
 
-    def h2up(self):
+    def h2up(self) -> int:
         if self.move("up"):
             h = 0
             for n, i in enumerate(self.puzzle):
@@ -217,7 +234,7 @@ class EightPuzzle():
             return h
         else:
             return float('inf')
-    def h2down(self):
+    def h2down(self) -> int:
         if self.move("down"):
             h = 0
             for n, i in enumerate(self.puzzle):
@@ -227,7 +244,7 @@ class EightPuzzle():
             return h
         else:
             return float('inf')
-    def h2left(self):
+    def h2left(self) -> int:
         if self.move("left"):
             h = 0
             for n, i in enumerate(self.puzzle):
@@ -237,7 +254,7 @@ class EightPuzzle():
             return h
         else:
             return float('inf')
-    def h2right(self):
+    def h2right(self) -> int:
         if self.move("right"):
             h = 0
             for n, i in enumerate(self.puzzle):
@@ -248,6 +265,38 @@ class EightPuzzle():
         else:
             return float('inf')
         
+    def solveBeam(self, m):
+        visited = set()
+        states = deque()
+        states.append((0, self.getState(), [], 0))
+        while not self.solved():
+            currentState = states.popleft()
+            h, state, pastmoves, nummoves = currentState
+            self.setState(state)
+            self.pastmoves = pastmoves
+            self.nummoves = nummoves
+            up, down, left, right = self.h2up(), self.h2down(), self.h2left(), self.h2right()
+            directions = ["up", "down", "left", "right"]
+            reverse = ["down", "up", "right", "left"]
+            mdistance = [up, down, left, right]
+            for i in range(4):
+                if self.move(directions[i]):
+                    prevmoves = self.pastmoves + [directions[i]]
+                    if self.getState() not in visited:
+                        states.append((mdistance[i], self.getState(), prevmoves, self.nummoves + 1))
+                        visited.add(self.getState())
+                    self.move(reverse[i])
+            sortedStates = sorted(states, key = lambda x: x[0])  
+            states = deque(sortedStates[:m])
+        print(self.nummoves)
+        for i in self.pastmoves:
+            print(i)
+
+
+            
+
+
+        
     def maxNodes(self, n) -> bool:
         if self.nodes > n:
             print("Maximum nodes reached")
@@ -256,11 +305,12 @@ class EightPuzzle():
 
 def main():
     test = EightPuzzle()
-    #test.randomizeState(60)
-    test.setState("283 406 751")
+    test.randomizeState(100)
+    #test.setState("786 124 350")
     test.printState()
     test.printBoard()
     test.solveAStar("h1")
-    print(test.nummoves)
+    #test.solveBeam(500)
+    test.printBoard()
 if __name__=="__main__":
     main()
