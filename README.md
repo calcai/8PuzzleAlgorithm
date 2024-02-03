@@ -8,3 +8,6 @@ The first algorithm used is A* Search, in which two heuristics are used: the num
 A* Search: $f(n) = g(n) + h(n)$
 
 where $f(n) =$ estimated total cost, $g(n) =$ cost from start node to node n, and $h(n) =$ estimated distance to goal state
+
+## Beam Search
+The next algorithm used is Beam Search, which similarly used Manhattan Distance, with its primary feature being that it limits the number of past moves to the "beam size", to limit space complexity.
